@@ -1,14 +1,15 @@
 {
-  "name": "create-node-app",
+  "name": "@sagarbiradar/create-node-init",
   "version": "1.0.0",
-  "description": "A CLI tool for scaffolding production-ready Node.js projects.",
+  "description": "A CLI tool for scaffolding production-ready Node.js projects",
   "main": "src/index.js",
   "bin": {
-    "create-new-app":"src/index.js"
+    "create-node-init": "src/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": ["cli", "nodejs", "scaffold", "generator", "init", "sagar"],
   "author": "Sagar Biradar",
-  "license": "ISC"
+  "license": "MIT"
 }

@@ -49,7 +49,7 @@ build/`;
 }
 
 function createIndexJS(projectPath){
-    const indexContent = `console.log('Hello from your new Node.js project! 🚀');`
+    const indexContent = `console.log('Hello from your new Node.js project!');`
     fs.writeFileSync(path.join(projectPath,'src','index.js'),indexContent);
     console.log('index.js file created');
 }
