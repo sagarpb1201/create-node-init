@@ -28,23 +28,23 @@ The CLI prompts you to customize your project:
 
 ## Features
 
-### ✅ **Smart Project Scaffolding**
+### **Smart Project Scaffolding**
 - Automatic project name validation and sanitization
 - Converts spaces to hyphens: "My Project" → "my-project"
 - Prevents invalid names (reserved words, special characters)
 
-### ✅ **Express.js Integration** 
+### **Express.js Integration** 
 - Complete Express server template with JSON API
 - Organized folder structure (routes/, middleware/)
 - Health check endpoint included
 - Automatic dependency management with latest versions
 
-### ✅ **Git Integration**
+### **Git Integration**
 - Optional Git repository initialization
 - Professional .gitignore with Node.js best practices
 - Ready for version control from day one
 
-### ✅ **Professional Structure**
+### **Professional Structure**
 - Clean, maintainable folder organization
 - Production-ready package.json with proper scripts
 - Development tools pre-configured (nodemon for Express projects)
