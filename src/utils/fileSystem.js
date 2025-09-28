@@ -1,12 +1,13 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('node:child_process');
+const {execAsync}=require('./processUtils');
+const basicTemplates = require('../templates/basicTemplates');
+const expressTemplates = require('../templates/expressTemplates');
+const {gitignoreTemplate}=require('../templates/gitIgnoreTemplate');
 
 function createProjectFolder(projectName) {
   const currentWorkingDirectory = process.cwd();
-  console.log('Current working directory', currentWorkingDirectory);
   const projectPath = path.join(currentWorkingDirectory, projectName);
-  console.log('Project path would be', projectPath);
   fs.mkdirSync(projectPath, { recursive: true });
   return projectPath;
 }
@@ -15,20 +16,16 @@ async function createProjectStructure(projectPath, projectConfig) {
   fs.mkdirSync(path.join(projectPath, 'src'), { recursive: true });
   if(projectConfig.expressRequired){
     fs.mkdirSync(path.join(projectPath,'src','middleware'),{recursive:true});
-     const routeContent = `const express = require('express');
-const router = express.Router();
 
-router.get('/health', (req, res) => {
-    res.json({ status: 'OK', service: 'healthy' });
-});
-
-module.exports = router;`;
     fs.mkdirSync(path.join(projectPath,'src','routes'),{recursive:true})
-    fs.writeFileSync(path.join(projectPath,'src','routes','index.js'),routeContent);
+    fs.writeFileSync(path.join(projectPath,'src','routes','index.js'),expressTemplates.routeTemplate);
   }
   await createPackageJSON(projectPath, projectConfig);
   createGitignore(projectPath);
   createIndexJS(projectPath, projectConfig);
+  if(projectConfig.initializeGit){
+    await initializeGit(projectPath);
+  }
 }
 
 async function createPackageJSON(projectPath, projectConfig) {
@@ -45,20 +42,8 @@ async function createPackageJSON(projectPath, projectConfig) {
     license: 'ISC',
   };
   if (projectConfig.expressRequired) {
-    const expressLatestVersion = await new Promise((resolve, reject) => {
-      exec('npm show express version', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error:${error.message}`);
-          reject(error.message);
-        }
-        if (stderr) {
-          console.error(`stderr:${stderr}`);
-          reject(stderr);
-        }
-        resolve(stdout.trim());
-      });
-    });
-    packageJsonContent.dependencies = { express: `^${expressLatestVersion}` };
+    const {stdout:expressLatestVersion} = (await execAsync('npm show express version'));
+    packageJsonContent.dependencies = { express: `^${expressLatestVersion.trim()}` };
     packageJsonContent.scripts.dev='nodemon src/index.js';
     packageJsonContent.devDependencies={nodemon:"^3.1.10"};
   }
@@ -68,46 +53,26 @@ async function createPackageJSON(projectPath, projectConfig) {
 }
 
 function createGitignore(projectPath) {
-  const gitignoreContent = `node_modules/
-.env
-.env.local
-*.log
-dist/
-build/`;
-
-  fs.writeFileSync(path.join(projectPath, '.gitignore'), gitignoreContent);
+  fs.writeFileSync(path.join(projectPath, '.gitignore'), gitignoreTemplate);
   console.log('.gitignore file created.');
 }
 
 function createIndexJS(projectPath, projectConfig) {
-  let indexContent;
+    const template = projectConfig.expressRequired 
+        ? expressTemplates.indexJs 
+        : basicTemplates.indexJs;
 
-  if (projectConfig.expressRequired) {
-    indexContent = `const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Middleware
-app.use(express.json());
-
-// Routes
-app.get('/', (req, res) => {
-    res.json({ 
-        message: 'Hello from your new Express.js API! 🚀',
-        timestamp: new Date().toISOString()
-    });
-});
-
-// Start server
-app.listen(port, () => {
-    console.log(\`Server running on port \${port}\`);
-});`;
-  } else {
-    indexContent = `console.log('Hello from your new Node.js project!');`;
-  }
-
-  fs.writeFileSync(path.join(projectPath, 'src', 'index.js'), indexContent);
+  fs.writeFileSync(path.join(projectPath, 'src', 'index.js'), template);
   console.log('index.js file created');
+}
+
+async function initializeGit(projectPath){
+    try{
+        await execAsync('git init',{cwd:projectPath});
+        console.log('Git repository initialized');
+    }catch(error){
+        console.warn('Failed initialize Git repository:',error.message);
+    }
 }
 
 module.exports = { createProjectFolder, createProjectStructure, createPackageJSON };
