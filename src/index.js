@@ -1,26 +1,22 @@
 #!/usr/bin/env node
 const { createProjectFolder, createProjectStructure } = require('./utils/fileSystem');
-const {isValidProjectName}=require('./utils/projectValidator');
+const { getProjectconfig } = require('./utils/prompts');
 
-function main(){
-    let projectName=process.argv[2];
+async function main(){
+    const projectConfig=await getProjectconfig();
+    const projectName=projectConfig.projectName;
+    console.log('Project config',projectConfig,projectName);
     let projectPath;
-
-    if(!projectName){
-        projectName='my-app'
-    }
+    let finalProjectName;
     
-    if(projectName==='.'){
+    if(projectConfig.useCurrentDirectory){
         console.log("Initializing project in current directory");
         projectPath=process.cwd();
-    }else{   
-        const result=isValidProjectName(projectName);
-        if(!result.isValid){
-            console.log(`Error: ${result.reason}`);
-            process.exit(1);
-        }
-        console.log(`Creating Project: ${result.cleanedName}`)
-        projectPath=createProjectFolder(result.cleanedName);
+        finalProjectName = require('path').basename(projectPath);
+    }else{
+        finalProjectName = projectConfig.projectName;
+        console.log(`Creating Project: ${finalProjectName}`)
+        projectPath = createProjectFolder(finalProjectName);
     }
 
     createProjectStructure(projectPath,projectName);

@@ -9,7 +9,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["cli", "nodejs", "scaffold", "generator", "init", "sagar"],
+  "keywords": [
+    "cli",
+    "nodejs",
+    "scaffold",
+    "generator",
+    "init",
+    "sagar"
+  ],
   "author": "Sagar Biradar",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "prompts": "^2.4.2"
+  }
 }
