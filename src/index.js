@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const { createProjectFolder, createProjectStructure } = require('./utils/fileSystem');
 const { getProjectconfig } = require('./utils/prompts');
+const path=require('node:path')
 
 async function main(){
     const projectConfig=await getProjectconfig();
@@ -12,14 +13,15 @@ async function main(){
     if(projectConfig.useCurrentDirectory){
         console.log("Initializing project in current directory");
         projectPath=process.cwd();
-        finalProjectName = require('path').basename(projectPath);
+        finalProjectName = path.basename(projectPath);
     }else{
         finalProjectName = projectConfig.projectName;
         console.log(`Creating Project: ${finalProjectName}`)
         projectPath = createProjectFolder(finalProjectName);
     }
+    projectConfig.projectName=finalProjectName;
 
-    createProjectStructure(projectPath,projectName);
+    await createProjectStructure(projectPath,projectConfig);
     console.log(`Project ready at: ${projectPath}`);
 }
 
