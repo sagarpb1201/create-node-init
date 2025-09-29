@@ -1,9 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const {execAsync}=require('./processUtils');
-const basicTemplates = require('../templates/basicTemplates');
-const expressTemplates = require('../templates/expressTemplates');
-const {gitignoreTemplate}=require('../templates/gitIgnoreTemplate');
 
 function createProjectFolder(projectName) {
   const currentWorkingDirectory = process.cwd();
@@ -18,7 +15,8 @@ async function createProjectStructure(projectPath, projectConfig) {
     fs.mkdirSync(path.join(projectPath,'src','middleware'),{recursive:true});
 
     fs.mkdirSync(path.join(projectPath,'src','routes'),{recursive:true})
-    fs.writeFileSync(path.join(projectPath,'src','routes','index.js'),expressTemplates.routeTemplate);
+    const routeTemplatePath = path.join(__dirname, '..', '..', 'templates', 'express.routes.js');
+    fs.copyFileSync(routeTemplatePath, path.join(projectPath, 'src', 'routes', 'index.js'));
   }
   await createPackageJSON(projectPath, projectConfig);
   createGitignore(projectPath);
@@ -53,15 +51,15 @@ async function createPackageJSON(projectPath, projectConfig) {
 }
 
 function createGitignore(projectPath) {
-  fs.writeFileSync(path.join(projectPath, '.gitignore'), gitignoreTemplate);
+  const gitignoreTemplatePath = path.join(__dirname, '..', '..', 'templates', 'common.gitignore');
+  fs.copyFileSync(gitignoreTemplatePath, path.join(projectPath, '.gitignore'));
   console.log('.gitignore file created.');
 }
 
 function createIndexJS(projectPath, projectConfig) {
-    const template = projectConfig.expressRequired 
-        ? expressTemplates.indexJs 
-        : basicTemplates.indexJs;
-
+  const templateName=projectConfig.expressRequired?'express.index.js':'basic.index.js';
+  const templatePath = path.join(__dirname, '..', '..', 'templates', templateName);
+  const template = fs.readFileSync(templatePath, { encoding: 'utf-8' });
   fs.writeFileSync(path.join(projectPath, 'src', 'index.js'), template);
   console.log('index.js file created');
 }
