@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const {execAsync}=require('./processUtils');
+const {FALLBACK_VERSIONS}=require('./constants');
 
 function createProjectFolder(projectName) {
   const currentWorkingDirectory = process.cwd();
@@ -49,37 +50,55 @@ async function createPackageJSON(projectPath, projectConfig) {
     author: '',
     license: 'ISC',
   };
-  const devDependenciesToFetch = ['typescript', '@types/node'];
+
+  const devDependenciesToFetch = [];
+  devDependenciesToFetch.push('nodemon');
+
+  packageJsonContent.scripts.dev = 'nodemon src/index.js';
+
   if (projectConfig.expressRequired) {
-    const {stdout:expressLatestVersion} = (await execAsync('npm show express version'));
-    packageJsonContent.dependencies = { express: `^${expressLatestVersion.trim()}` };
-    packageJsonContent.scripts.dev='nodemon src/index.js';
-    devDependenciesToFetch.push('nodemon');
+    try{
+      const {stdout:expressLatestVersion} = (await execAsync('npm show express version'));
+      packageJsonContent.dependencies = { express: `^${expressLatestVersion.trim()}` };
+    }catch(err){
+      console.warn(`[!] Warning: Could not fetch the latest version for express'. Using fallback version '${FALLBACK_VERSIONS.express}'.`);
+      packageJsonContent.dependencies={express:FALLBACK_VERSIONS.express}
+    }
   }
 
   if (projectConfig.typescript) {
-    packageJsonContent.devDependencies = packageJsonContent.devDependencies || {};
-    packageJsonContent.main='dist/index.js';
+    devDependenciesToFetch.push('typescript', '@types/node', 'ts-node');
 
+    packageJsonContent.main='dist/index.js';
     packageJsonContent.scripts.build = 'tsc';
     packageJsonContent.scripts.start = 'node dist/index.js';
+    packageJsonContent.scripts.dev = 'nodemon --watch "src/**" --ext "ts,json" --exec "ts-node src/index.ts"';
 
     if(projectConfig.expressRequired){
       devDependenciesToFetch.push('@types/express');
-      devDependenciesToFetch.push('ts-node');
-
-      packageJsonContent.scripts.dev = 'nodemon --watch "src/**" --ext "ts,json" --exec "ts-node src/index.ts"';
     }
-
-    const versionPromises = devDependenciesToFetch.map(dep => execAsync(`npm show ${dep} version`));
-
-    const versions = await Promise.all(versionPromises);
-
-    devDependenciesToFetch.forEach((dep, index) => {
-      const version = versions[index].stdout.trim();
-      packageJsonContent.devDependencies[dep] = `^${version}`;
-    });
   }
+
+  packageJsonContent.devDependencies = {};
+  const versionPromises = devDependenciesToFetch.map(dep => execAsync(`npm show ${dep} version`));
+  const results = await Promise.allSettled(versionPromises);
+  const failedPackages = [];
+
+  results.forEach(({ status, value }, index) => {
+    const packageName=devDependenciesToFetch[index];
+    if (status === 'fulfilled') {
+      packageJsonContent.devDependencies[packageName] = `^${value.stdout.trim()}`;
+    } else {
+      failedPackages.push(devDependenciesToFetch[index]);
+      packageJsonContent.devDependencies[packageName] = FALLBACK_VERSIONS[packageName];
+    }
+  })
+
+  if (failedPackages.length > 0) {
+    console.warn(`\n Could not fetch latest versions for: ${failedPackages.join(', ')}`);
+    console.warn(`   Using fallback versions. Your project will still work!\n`);
+}
+
   const jsonString = JSON.stringify(packageJsonContent, null, 2);
   fs.writeFileSync(path.join(projectPath, 'package.json'), jsonString);
   console.log('package.json file created');
