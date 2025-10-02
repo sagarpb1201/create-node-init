@@ -43,17 +43,6 @@ async function getProjectconfig() {
       message: 'Initialize Git repository?',
       initial: false,
     },
-    {
-      type: 'select',
-      name: 'packageManager',
-      message: 'Which package manager do you prefer?',
-      choices: [
-        { title: 'npm', value: 'npm' },
-        { title: 'yarn', value: 'yarn' },
-        { title: 'pnpm', value: 'pnpm' },
-      ],
-      initial: 0,
-    },
   ];
 
   const answers = await prompts(questions);
