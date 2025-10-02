@@ -39,6 +39,13 @@ The CLI prompts you to customize your project:
 - Health check endpoint included
 - Automatic dependency management with latest versions
 
+### **TypeScript Integration**
+- **Zero-Config Setup**: Generates a production-ready `tsconfig.json` with best-practice settings for Node.js.
+- **Type-Safe Templates**: All generated code, including Express routes and middleware, is fully typed.
+- **Seamless DX**: The `dev` script is pre-configured with `ts-node` and `nodemon` for a live-reloading TypeScript environment.
+- **Automatic Dependencies**: Automatically adds `typescript`, `@types/node`, `@types/express`, and `ts-node` to your dev dependencies.
+- **Build Ready**: Includes a `build` script that compiles your TypeScript to optimized JavaScript in a `dist/` directory.
+
 ### **Git Integration**
 - Optional Git repository initialization
 - Professional .gitignore with Node.js best practices
@@ -114,10 +121,10 @@ my-project/
 - **Modern Tooling**: Latest package versions and development tools
 - **Flexible**: Works for both simple scripts and full Express APIs
 - **Maintained**: Actively developed with new features added regularly
+- **TypeScript Support**: Full TypeScript templates and configuration
 
 ## Coming Soon
 
-- **TypeScript Support**: Full TypeScript templates and configuration
 - **Package Manager Choice**: Support for npm, yarn, and pnpm
 - **Testing Setup**: Jest/Mocha integration options
 - **Docker Support**: Containerization templates

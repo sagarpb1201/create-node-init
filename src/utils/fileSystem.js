@@ -52,18 +52,20 @@ async function createPackageJSON(projectPath, projectConfig) {
   };
 
   const devDependenciesToFetch = [];
+  const dependenciesToFetch=[];
   devDependenciesToFetch.push('nodemon');
 
   packageJsonContent.scripts.dev = 'nodemon src/index.js';
 
   if (projectConfig.expressRequired) {
-    try{
-      const {stdout:expressLatestVersion} = (await execAsync('npm show express version'));
-      packageJsonContent.dependencies = { express: `^${expressLatestVersion.trim()}` };
-    }catch(err){
-      console.warn(`[!] Warning: Could not fetch the latest version for express'. Using fallback version '${FALLBACK_VERSIONS.express}'.`);
-      packageJsonContent.dependencies={express:FALLBACK_VERSIONS.express}
-    }
+    dependenciesToFetch.push('express');
+    // try{
+    //   const {stdout:expressLatestVersion} = (await execAsync('npm show express version'));
+    //   packageJsonContent.dependencies = { express: `^${expressLatestVersion.trim()}` };
+    // }catch(err){
+    //   console.warn(`[!] Warning: Could not fetch the latest version for express'. Using fallback version '${FALLBACK_VERSIONS.express}'.`);
+    //   packageJsonContent.dependencies={express:FALLBACK_VERSIONS.express}
+    // }
   }
 
   if (projectConfig.typescript) {
@@ -80,17 +82,30 @@ async function createPackageJSON(projectPath, projectConfig) {
   }
 
   packageJsonContent.devDependencies = {};
-  const versionPromises = devDependenciesToFetch.map(dep => execAsync(`npm show ${dep} version`));
-  const results = await Promise.allSettled(versionPromises);
+  packageJsonContent.dependencies={};
+  const devDependenciesVersionPromises = devDependenciesToFetch.map(dep => execAsync(`npm show ${dep} version`));
+  const dependenciesVersionPromises=dependenciesToFetch.map(dep=>execAsync(`npm show ${dep} version`));
+  const devDependenciesResults = await Promise.allSettled(devDependenciesVersionPromises);
+  const dependenciesResults=await Promise.allSettled(dependenciesVersionPromises);
   const failedPackages = [];
 
-  results.forEach(({ status, value }, index) => {
+  devDependenciesResults.forEach(({ status, value }, index) => {
     const packageName=devDependenciesToFetch[index];
     if (status === 'fulfilled') {
       packageJsonContent.devDependencies[packageName] = `^${value.stdout.trim()}`;
     } else {
       failedPackages.push(devDependenciesToFetch[index]);
       packageJsonContent.devDependencies[packageName] = FALLBACK_VERSIONS[packageName];
+    }
+  })
+
+  dependenciesResults.forEach(({status,value},index)=>{
+    const packageName=dependenciesToFetch[index];
+    if(status==='fulfilled'){
+      packageJsonContent.dependencies[packageName]=`^${value.stdout.trim()}`;
+    }else{
+      failedPackages.push(dependenciesToFetch[index]);
+      packageJsonContent.dependencies[packageName]=FALLBACK_VERSIONS[packageName];
     }
   })
 
