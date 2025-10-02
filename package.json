@@ -1,6 +1,6 @@
 {
   "name": "@sagarbiradar/create-node-init",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A CLI tool for scaffolding production-ready Node.js projects",
   "main": "src/index.js",
   "bin": {
